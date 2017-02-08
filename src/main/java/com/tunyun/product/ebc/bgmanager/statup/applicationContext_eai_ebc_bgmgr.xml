@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+<beans default-destroy-method="destroy" default-init-method="start">
+	<!-- dao -->
+	<bean id="CommonDao" class="com.tunyun.product.ebc.common.dao.CommonDaoImpl">
+		<property name="dataSource" ref="mainDataSource_postgre" />
+	</bean>
+
+	<bean id="goodsDetailDao" class="com.tunyun.product.ebc.bgmanager.dao.GoodsDetailDaoImpl" parent="baseDao">
+	</bean>
+	<bean id="triCategDao" class="com.tunyun.product.ebc.bgmanager.dao.TriCateDaoImpl" parent="baseDao">
+	</bean>
+	
+	<bean id="attrDao" class="com.tunyun.product.ebc.bgmanager.dao.AttrDaoImpl" parent="baseDao"></bean>
+	<bean id="attrValueDao" class="com.tunyun.product.ebc.bgmanager.dao.AttrValueDaoImpl" parent="baseDao"></bean>
+	<bean id="attrRuleDao" class="com.tunyun.product.ebc.bgmanager.dao.AttrRuleDaoImpl" parent="baseDao"></bean>
+	<bean id="trWordDao" class="com.tunyun.product.ebc.bgmanager.dao.TrWordDaoImpl" parent="baseDao"></bean>
+	<bean id="newProdConfigDao" class="com.tunyun.product.ebc.bgmanager.dao.NewProdConfigDaoImpl" parent="baseDao"></bean>
+
+
+	<!-- serv -->
+
+	<bean id="CategoryServ" class="com.tunyun.product.ebc.bgmanager.serv.CategoryServ">
+		<property name="commonDao" ref="CommonDao" />
+	</bean>
+
+	<bean id="ChannelServ" class="com.tunyun.product.ebc.bgmanager.serv.ChannelServ">
+		<property name="commonDao" ref="CommonDao" />
+	</bean>
+
+	<bean id="goodsDetailServ" class="com.tunyun.product.ebc.bgmanager.serv.GoodsDetailServ">
+		<property name="zkQuorum" value="${zk.quorum}" />
+		<property name="zkPort" value="${zk.clientport}" />
+		<property name="goodsDetailDao" ref="goodsDetailDao" />
+	</bean>
+	
+	<bean id="productServ" class="com.tunyun.product.ebc.bgmanager.serv.ProductServ">
+		<property name="zkQuorum" value="${zk.quorum}" />
+		<property name="zkPort" value="${zk.clientport}" />
+		<property name="triCategDao" ref="triCategDao" />
+		<property name="goodsDetailDao" ref="goodsDetailDao" />
+	</bean>
+	
+	<bean id="attrValueServ" class="com.tunyun.product.ebc.bgmanager.serv.AttrValueServ" parent="baseServ">
+		<property name="attrValueDao" ref="attrValueDao" />
+	</bean>
+	
+	<bean id="attrServ" class="com.tunyun.product.ebc.bgmanager.serv.AttrServ" parent="baseServ">
+		<property name="attrDao" ref="attrDao" />
+	</bean>
+	<bean id="attrRuleServ" class="com.tunyun.product.ebc.bgmanager.serv.AttrRuleServ" parent="baseServ">
+		<property name="attrRuleDao" ref="attrRuleDao" />
+	</bean>
+	
+	<bean id="trWordServ" class="com.tunyun.product.ebc.bgmanager.serv.TrWordServ" parent="baseServ">
+		<property name="trWordDao" ref="trWordDao" />
+	</bean>
+
+	<bean id="newProdConfigServ" class="com.tunyun.product.ebc.bgmanager.serv.NewProdConfigServ" parent="baseServ">
+		<property name="newProdConfigDao" ref="newProdConfigDao" />
+	</bean>
+</beans>

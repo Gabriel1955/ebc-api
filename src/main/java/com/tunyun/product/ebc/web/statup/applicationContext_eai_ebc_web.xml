@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+<beans default-destroy-method="destroy" default-init-method="start">
+
+	<!-- es <bean id="ebc_api_esquery" class="com.tunyun.product.ebc.web.es.EsQuery" 
+		init-method="init"> <property name="server" value="${es.server}" /> <property 
+		name="port" value="${es.port}" /> <property name="cluster" value="${es.cluster}" 
+		/> </bean> -->
+
+	<bean id="ebc_api_esDao" class="com.tunyun.product.ebc.web.es.EsDao">
+		<property name="url" value="${es.elasticSearchUrl}" />
+	</bean>
+
+	<bean id="ebc_api_industryDao" class="com.tunyun.product.ebc.web.es.IndustryInfoDao">
+		<property name="esDao" ref="ebc_api_esDao" />
+	</bean>
+
+	<bean id="induAnanlysisDao" class="com.tunyun.product.ebc.web.es.IndustryAnalysisDao">
+		<property name="esDao" ref="ebc_api_esDao" />
+	</bean>
+
+	<bean id="comAnanlysisDao" class="com.tunyun.product.ebc.web.es.CompeteAnalysisDao">
+		<property name="esDao" ref="ebc_api_esDao" />
+	</bean>
+
+	<!-- dao -->
+	<bean id="ebc_api_dao" class="com.tunyun.product.ebc.web.dao.EbcapiDAOImp">
+		<property name="ds" ref="mainDataSource_postgre" />
+	</bean>
+
+	<bean id="newProdDao" class="com.tunyun.product.ebc.web.dao.NewProdDaoImpl" parent="baseDao"></bean>
+	<bean id="commonMybatisDao" class="com.tunyun.product.ebc.web.dao.CommonMybatisDaoImpl" parent="baseDao"></bean>
+	<!-- json handle -->
+	<bean id="indu_comAnalysis"
+		class="com.tunyun.product.ebc.web.server.induanalysis.ComplexAnalysis" />
+	<bean id="indu_catAnalysis"
+		class="com.tunyun.product.ebc.web.server.induanalysis.CategoryAnalysis" />
+	<bean id="indu_chanAnalysis"
+		class="com.tunyun.product.ebc.web.server.induanalysis.ChannelAnalysis" />
+	<bean id="com_brandAnalysis"
+		class="com.tunyun.product.ebc.web.server.competeanalysis.BrandAnalysis" />
+	<bean id="com_shopAnalysis"
+		class="com.tunyun.product.ebc.web.server.competeanalysis.ShopAnalysis" />
+	<bean id="com_prodAnalysis"
+		class="com.tunyun.product.ebc.web.server.competeanalysis.ProdAnalysis" />
+
+	<!-- server -->
+
+	<bean id="baseServ" class="com.tunyun.product.ebc.web.server.BaseServ">
+		<property name="transactionManager" ref="transactionManager" />
+		<property name="commonMybatisDao" ref="commonMybatisDao" />
+	</bean>
+	<bean id="ebc_api_server" class="com.tunyun.product.ebc.web.server.EbcapiServer">
+		<property name="es" ref="ebc_api_industryDao" />
+		<property name="dao" ref="ebc_api_dao" />
+	</bean>
+
+	<bean id="industry_info_server" class="com.tunyun.product.ebc.web.server.IndustryInfoServ">
+		<property name="es" ref="ebc_api_industryDao" />
+		<property name="dao" ref="ebc_api_dao" />
+	</bean>
+
+	<bean id="induAnalysisServ" class="com.tunyun.product.ebc.web.server.IndustryAnalysisServ">
+		<property name="ebcDao" ref="ebc_api_dao" />
+		<property name="induAnanlysisDao" ref="induAnanlysisDao" />
+		<property name="comAnalysis" ref="indu_comAnalysis" />
+		<property name="catAnalysis" ref="indu_catAnalysis" />
+		<property name="chanAnalysis" ref="indu_chanAnalysis" />
+	</bean>
+
+	<bean id="comAnalysisServ" class="com.tunyun.product.ebc.web.server.CompeteAnalysisServ">
+		<property name="competeAnalysisDao" ref="comAnanlysisDao" />
+		<property name="brandAnalysis" ref="com_brandAnalysis" />
+		<property name="shopAnalysis" ref="com_shopAnalysis" />
+		<property name="prodAnalysis" ref="com_prodAnalysis" />
+	</bean>
+
+	<bean id="systemServ" class="com.tunyun.product.ebc.web.server.system.SystemServ">
+		<property name="ebcDao" ref="ebc_api_dao" />
+	</bean>
+	<bean id="newProdServ" class="com.tunyun.product.ebc.web.server.NewProdServ">
+		<property name="newProdDao" ref="newProdDao" />
+	</bean>
+	<bean id="commonReqServ" class="com.tunyun.product.ebc.web.server.CommonReqServ" parent="baseServ">
+	</bean>
+	<!-- thrift interface -->
+	<bean id="tprotocolFactory" class="org.apache.thrift.protocol.TBinaryProtocol$Factory"
+		lazy-init="false" />
+	<bean id="transportFactory" class="org.apache.thrift.transport.TTransportFactory"
+		lazy-init="false" />
+	<bean id="abstractThriftFactory" class="com.common.system.utils.thrift.AbstractThriftFactory"
+		abstract="true">
+		<property name="tprotocolFactory" ref="tprotocolFactory" />
+		<property name="transportFactory" ref="transportFactory" />
+	</bean>
+
+	<bean id="serverConfigInfo" class="com.common.system.utils.thrift.HostPortServiceName">
+		<property name="hostname" value="${thrift.server}" />
+		<property name="port" value="${thrift.port}" />
+		<property name="serviceName" value="${thrift.name}" />
+	</bean>
+
+	<bean id="rule-engine-ruleFace" class="com.tunyun.product.ebc.web.impl.IRuleFace">
+		<property name="server" ref="ebc_api_server" />
+		<property name="industry" ref="industry_info_server" />
+		<property name="induanalysis" ref="induAnalysisServ" />
+		<property name="companlysis" ref="comAnalysisServ" />
+		<property name="system" ref="systemServ" />
+		<property name="categoryServ" ref="CategoryServ" />
+		<property name="channelServ" ref="ChannelServ" />
+		<property name="goodsDetailServ" ref="goodsDetailServ" />
+		<property name="productServ" ref="productServ" />
+		<property name="attrServ" ref="attrServ" />
+		<property name="attrValueServ" ref="attrValueServ" />
+		<property name="attrRuleServ" ref="attrRuleServ" />
+		<property name="trWordServ" ref="trWordServ" />
+		<property name="newProdServ" ref="newProdServ" />
+		<property name="newProdConfigServ" ref="newProdConfigServ" />
+		<property name="commonReqServ" ref="commonReqServ" />
+
+	</bean>
+
+	<bean id="rule-engine-thriftServerCreator" class="com.tunyun.product.ebc.web.impl.RuleThritServer"
+		lazy-init="false" parent="abstractThriftFactory" init-method="init">
+		<property name="serviceObject" ref="rule-engine-ruleFace" />
+		<property name="hostPortServiceName" ref="serverConfigInfo" />
+	</bean>
+
+	<!--zk-clust-service-publish <bean id="zkClusterServicePublish" class="com.common.zk.cluster.publish.ZkClusterServicePublisher" 
+		lazy-init="false"> <property name="zkServiceDiscovery" ref="zkServiceDiscovery"/> 
+		</bean> -->
+
+	<!--server-app <bean id="serverAppTest" class="com.tunyun.product.ebc.web.impl.ZkServerApp" 
+		lazy-init="false" init-method="start"> <property name="publisher" ref="zkClusterServicePublish"/> 
+		<property name="hostname" value="${thrift.server}" /> <property name="port" 
+		value="${thrift.port}" /> <property name="name" value="${thrift.zk.name}" 
+		/> </bean> -->
+</beans>

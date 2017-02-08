@@ -1,0 +1,13 @@
+namespace java com.tunyun.product.ebc.web.idl
+
+service DataServer
+{
+	/**
+	* 客户端向服务端发送数据请求，主要用于发送json格式数据
+	* @param model  模块名称
+	* @param item  功能名称
+	* @param inputStr  输入参数，格式为json
+	* @return 数据返回json格式
+	*/
+	string execute(1:string model, 2:string item, 3:string inputStr);
+}

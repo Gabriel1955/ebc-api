@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="gbk"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.tunyun.product.ebc.web.dao.Common">
+    <select id="queryTrIndu" parameterType="map" resultType="map">
+        select uid as id,name,indu_desc as desc from tr_indu
+    </select>
+    <select id="queryCatesByIndu" parameterType="map" resultType="map">
+        select b.uid as id,b.cat_name as name from tr_indu_r_cat a left join tri_categ b on a.cid=b.uid where a.indu_id=${indu_id}
+    </select>
+
+
+</mapper>

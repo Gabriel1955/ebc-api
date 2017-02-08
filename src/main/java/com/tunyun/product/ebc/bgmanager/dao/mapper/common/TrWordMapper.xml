@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="gbk"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.tunyun.product.ebc.bgmanager.dao.TrWordDaoImpl">
+	<resultMap type="WordFeaturePO" id="wordFeatureBean">
+		<result column="n_id" property="n_id" />
+		<result column="feature" property="word" />
+		<result column="weight1" property="weight" />
+		<result column="cid" property="cid" />
+
+		<!-- 一对多的关系 -->
+		<!-- property: 指的是集合属性的值, ofType：指的是集合中元素的类型 -->
+		<collection property="wordAdjectives" ofType="WordAdjectivePO">
+			<result column="d_id" property="d_id" />
+			<result column="p_id" property="p_id" />
+			<result column="p_name" property="pname" />
+			<result column="adjective" property="word" />
+			<result column="weight" property="weight" />
+			<result column="is_check" property="is_check" />
+			<result column="check_result" property="check_result" />
+			<result column="check_time" property="check_time" />
+			<result column="comment" property="comment" />
+		</collection>
+	</resultMap>
+
+	<select id="countWordFeatures" parameterType="map" resultType="long">
+		select count(1) from (select
+		distinct n_id,feature
+		from
+		tr_word_adjective where 1=1
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and p_id = ${pid}
+		</if>
+		<if test="keyword!=null and keyword!=''">
+			and feature like #{keyword}
+		</if>
+		<if test="is_check!=null and is_check!=''">
+			and is_check = ${is_check}
+		</if>
+		<if test="check_result!=null and check_result!=''">
+			and check_result = ${check_result}
+		</if>
+		) a
+	</select>
+	<select id="queryWordFeaturesByPage" resultMap="wordFeatureBean"
+		parameterType="map">
+		select a.*,b.*,c.p_name
+		from (select
+		distinct n_id,feature,sum(weight) as "weight1"
+		from tr_word_adjective where 1=1
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and p_id = ${pid}
+		</if>
+		<if test="keyword!=null and keyword!=''">
+			and feature like #{keyword}
+		</if>
+		<if test="is_check!=null and is_check!=''">
+			and is_check = ${is_check}
+		</if>
+		<if test="check_result!=null and check_result!=''">
+			and check_result = ${check_result}
+		</if>
+		group by n_id,feature
+		order by weight1 desc
+		<if test="limit!=null and offset!=null">
+			limit ${limit} offset ${offset}
+		</if>) a left
+		join (select
+		d_id,adjective,feature,weight,p_id,cid,is_check,check_result,check_time,comment
+		from tr_word_adjective where 1=1
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and p_id = ${pid}
+		</if>
+		<if test="is_check!=null and is_check!=''">
+			and is_check = ${is_check}
+		</if>
+		<if test="check_result!=null and check_result!=''">
+			and check_result = ${check_result}
+		</if>) b on
+		a.feature=b.feature
+		left join tp_p_model c on b.p_id=c.pid
+		order by a.weight1 desc
+	</select>
+
+	<update id="updateWordFeature" parameterType="map">
+		update tr_word_adjective
+		<set>
+			<if test="pid != null">p_id=#{pid},</if>
+			<if test="check_result != null">check_result=#{check_result},</if>
+			<if test="check_time != null">check_time=#{check_time},</if>
+			<if test="is_check != null">is_check=#{is_check},</if>
+		</set>
+		where n_id=#{n_id}
+	</update>
+
+
+</mapper>

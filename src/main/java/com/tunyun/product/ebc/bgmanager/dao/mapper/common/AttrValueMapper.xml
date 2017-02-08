@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="gbk"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.tunyun.product.ebc.bgmanager.dao.AttrValueDaoImpl">
+	<resultMap type="AttrValuePO" id="attrValueBean">
+		<result column="cid" property="cid" />
+		<result column="pid" property="pid" />
+		<result column="vid" property="vid" />
+		<result column="v_name" property="vname" />
+		<result column="state" property="state" />
+		<!-- 一对多的关系 -->
+		<!-- property: 指的是集合属性的值, ofType：指的是集合中元素的类型 -->
+		<collection property="valias" ofType="AliasPO">
+			<result column="uid" property="uid" />
+			<result column="vid" property="id" />
+			<result column="v_alias" property="name" />
+		</collection>
+	</resultMap>
+
+	<select id="queryApprovedAttrValues" resultMap="attrValueBean"
+		parameterType="map">
+		select a.*,b.* from (select distinct
+		cid,pid,vid,v_name,state from
+		tp_pv_model where 1=1 and state=1
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and pid = ${pid}
+		</if>
+		<if test="v_name!=null and v_name!=''">
+			and v_name=#{v_name}
+		</if>
+		order by v_name) a left join (select uid,vid,v_alias from tp_pv_model where 1=1 and
+		state=1
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and pid = ${pid}
+		</if>
+		<if test="v_name!=null and v_name!=''">
+			and v_name=#{v_name}
+		</if>
+		) b on a.vid=b.vid 
+
+	</select>
+
+	<select id="queryNotApprovedAttrValues" resultMap="attrValueBean"
+		parameterType="map">
+		select a.*,b.* from (select distinct cid,pid,vid,v_name,state from
+		tp_pv_synonym where 1=1
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and pid = ${pid}
+		</if>
+		<if test="v_name!=null and v_name!=''">
+			and v_name=#{v_name}
+		</if>
+		<if
+			test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			<![CDATA[ and add_time >= ${startTime} and add_time < ${endTime}]]>
+		</if>
+		<![CDATA[and state < 0 ]]>)
+		a left join (select
+		uid,vid,v_name,v_alias from tp_pv_synonym
+		where 1=1
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and pid = ${pid}
+		</if>
+		<if test="v_name!=null and v_name!=''">
+			and v_name=#{v_name}
+		</if>
+		<if
+			test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			<![CDATA[ and add_time >= ${startTime} and add_time < ${endTime}]]>
+		</if>
+		<![CDATA[and state < 0 ]]>)
+		b on a.v_name=b.v_name
+		order by a.state desc,a.v_name
+	</select>
+
+	<select id="queryAttrValueDetails" parameterType="map"
+		resultType="map">
+		select a.v_num,a.chan_id,a.p_alias,a.v_alias,a,items,b.chan_name from
+		tp_pv_cited a left join tr_tenant_chan b on a.chan_id=b.chan_id where
+		a.cid=${cid} and a.p_alias in (select p_alias from tp_p_model where
+		pid=${pid})
+		and a.v_alias=#{v_alias}
+		<![CDATA[ and a.add_time >= ${startTime} and a.add_time < ${endTime}]]>
+	</select>
+
+	<update id="updateSynonym" parameterType="map">
+		update tp_pv_synonym
+		<set>
+			<if test="state != null">state=${state},</if>
+			<if test="newvname != null and newvname!=''">v_name=#{newvname},</if>
+		</set>
+		where cid=${cid} and pid=${pid}
+		<if test="v_name!=null and v_name!=''">
+			and v_name=#{v_name}
+		</if>
+		<if test="v_alias!=null and v_alias!=''">
+			and v_alias=#{v_alias}
+		</if>
+    <![CDATA[ 
+    	 and state<0 and add_time >= ${startTime} and add_time < ${endTime}
+     ]]>
+	</update>
+
+	<select id="queryMaxVid" resultType="long" parameterType="map">
+		select
+		max_vid from tri_prop where uid=${pid}
+	</select>
+
+	<update id="updateMaxVid" parameterType="map">
+		update tri_prop set
+		max_vid=${vid} where uid=${pid}
+	</update>
+	<insert id="insertPVModel" parameterType="map">
+		insert into tp_pv_model
+		(state,add_time,cid,pid,vid,v_name,v_alias) values
+		(${state},${addTime},${cid},${pid},${vid},#{v_name},#{v_alias})
+	</insert>
+
+	<select id="queryPV" parameterType="map" resultType="map">
+		select * from tri_prop_v where pid=${pid} and v_name=#{v_name} and v_alias=#{v_alias} and state=${state}
+	</select>
+
+	<insert id="insertPV" parameterType="map">
+		insert into tri_prop_v
+		(uid,state,add_time,pid,v_name,v_alias,sort_order) values
+		(${vid},${state},${addTime},${pid},#{v_name},#{v_alias},1)
+	</insert>
+	<insert id="insertCategPV" parameterType="map">
+		insert into
+		tri_categ_prop_v (cid,pid,vid,sort_order) values
+		(${cid},${pid},${vid},1)
+	</insert>
+
+	<delete id="deletePV" parameterType="map">
+		delete from tri_prop_v where
+		uid=${vid} and pid=${pid} and v_name=#{v_name}
+	</delete>
+
+	<delete id="deletePVModel" parameterType="map">
+		delete from tp_pv_model
+		where vid=${vid} and cid=${cid} and pid=${pid} and v_name=#{v_name}
+		and v_alias=#{v_alias}
+	</delete>
+
+	<update id="updateSynonym1" parameterType="map">
+		update tp_pv_synonym
+		set state=-3 where cid=${cid} and pid=${pid} and v_name=#{v_name} and
+		v_alias=#{v_alias} and state=1
+	</update>
+
+	<select id="queryAttrs" parameterType="map" resultType="map">
+		select
+		distinct pid,p_name pname from tp_p_model where cid = ${cid} and state
+		= 1 order by pid
+	</select>
+
+
+	<select id="queryApprovedAttrValuesByPage" resultMap="attrValueBean"
+		parameterType="map">
+		select a.*,b.* from (select distinct
+		cid,pid,vid,v_name,state from
+		tp_pv_model where 1=1 and state=1
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and pid = ${pid}
+		</if>
+		<if test="v_name!=null and v_name!=''">
+			and v_name=#{v_name}
+		</if>
+		<if test="keyword!=null and keyword!=''">
+			and v_name like #{keyword}
+		</if>
+		<if test="keyword1!=null and keyword1!=''">
+			and v_name = #{keyword1}
+		</if>
+		order by v_name
+		<if test="limit!=null and offset!=null">
+			limit ${limit} offset ${offset}
+		</if>) a left join (select uid,vid,v_alias
+		from tp_pv_model where 1=1 and
+		state=1
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and pid = ${pid}
+		</if>
+		<if test="v_name!=null and v_name!=''">
+			and v_name=#{v_name}
+		</if>
+		) b on a.vid=b.vid 
+	</select>
+
+	<select id="countApprovedAttrValues" parameterType="map"
+		resultType="long">
+		select count(1) from (select distinct
+		cid,pid,vid,v_name,state from
+		tp_pv_model where 1=1 and state=1
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and pid = ${pid}
+		</if>
+		<if test="v_name!=null and v_name!=''">
+			and v_name=#{v_name}
+		</if>
+		<if test="keyword!=null and keyword!=''">
+			and v_name like #{keyword}
+		</if>
+		<if test="keyword1!=null and keyword1!=''">
+			and v_name = #{keyword1}
+		</if>
+		) a
+	</select>
+
+	<select id="queryNotApprovedAttrValuesByPage" resultMap="attrValueBean"
+		parameterType="map">
+		select a.*,b.* from (select distinct cid,pid,vid,v_name,v_name_size,state from
+		tp_pv_synonym where 1=1 and v_name!=''
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and pid = ${pid}
+		</if>
+		<if test="v_name!=null and v_name!=''">
+			and v_name=#{v_name}
+		</if>
+		<if test="keyword!=null and keyword!=''">
+			and v_name like #{keyword}
+		</if>
+		<if test="keyword1!=null and keyword1!=''">
+			and v_name = #{keyword1}
+		</if>
+		<if
+			test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			<![CDATA[ and add_time >= ${startTime} and add_time < ${endTime}]]>
+		</if>
+		<![CDATA[and state < 0 ]]>
+		order by v_name_size desc,state desc,v_name <if test="limit!=null and offset!=null">
+		limit ${limit} offset ${offset}
+	</if>)
+		a left join
+		(select
+		uid,vid,v_name,v_alias from tp_pv_synonym
+		where 1=1 and v_alias!=''
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and pid = ${pid}
+		</if>
+		<if test="v_name!=null and v_name!=''">
+			and v_name=#{v_name}
+		</if>
+		<if
+			test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			<![CDATA[ and add_time >= ${startTime} and add_time < ${endTime}]]>
+		</if>
+		<![CDATA[and state < 0 ]]>)
+		b on a.v_name=b.v_name
+
+	</select>
+
+	<select id="countNotApprovedAttrValues" resultType="long"
+		parameterType="map">
+		select count(1) from (select distinct cid,pid,vid,v_name,state from
+		tp_pv_synonym where 1=1
+		<if test="cid!=null and cid!=''">
+			and cid = ${cid}
+		</if>
+		<if test="pid!=null and pid!=''">
+			and pid = ${pid}
+		</if>
+		<if test="v_name!=null and v_name!=''">
+			and v_name=#{v_name}
+		</if>
+		<if test="keyword!=null and keyword!=''">
+			and v_name like #{keyword}
+		</if>
+		<if test="keyword1!=null and keyword1!=''">
+			and v_name = #{keyword1}
+		</if>
+		<if
+			test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			<![CDATA[ and add_time >= ${startTime} and add_time < ${endTime}]]>
+		</if>
+		<![CDATA[and state < 0 ]]>
+		) a
+	</select>
+</mapper>

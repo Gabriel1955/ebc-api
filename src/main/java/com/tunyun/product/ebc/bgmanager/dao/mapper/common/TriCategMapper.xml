@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="gbk"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.tunyun.product.ebc.bgmanager.dao.TriCateDaoImpl">
+	<select id="queryTriCategs" resultType="map" parameterType="map">
+		select a.uid,a.cat_name,a.cat_alias from tri_categ a where a.state = 1 
+		<if test="p_id!=null">
+			and a.p_id=${p_id}
+		</if>
+		order by a.sort_order
+	</select>
+
+	<select id="queryTriCateg" parameterType="map" resultType="map">
+		select distinct p
+		select a.*,b.pid,b.p_name,c.vid,c.v_name from (select uid,cat_name,cat_alias from tri_categ where uid=${cid}) a  left join tp_p_model b on a.uid=b.cid left join tp_pv_model c on b.pid=c.pid
+	</select>
+</mapper>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="gbk"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.tunyun.product.ebc.bgmanager.dao.AttrRuleDaoImpl">
+	<resultMap type="AttrRulePO" id="attrRuleBean">
+		<result column="cid" property="cid" />
+		<result column="chan_id" property="chan_id" />
+		<result column="p_name" property="p_name" />
+		<!-- 一对多的关系 -->
+		<!-- property: 指的是集合属性的值, ofType：指的是集合中元素的类型 -->
+		<collection property="preRules" ofType="RulePO">
+			<result column="expr1" property="expr" />
+			<result column="type1" property="type" />
+			<result column="replace_str1" property="replace_str" />
+			<result column="index1" property="index" />
+		</collection>
+		<collection property="afterRules" ofType="RulePO">
+			<result column="expr2" property="expr" />
+			<result column="type2" property="type" />
+			<result column="replace_str2" property="replace_str" />
+			<result column="index2" property="index" />
+		</collection>
+	</resultMap>
+
+
+	<select id="queryAttrRules" parameterType="map" resultMap="attrRuleBean">
+		select distinct a.cid,a.p_name,b.chan_id,b.expr as
+		"expr1",b.replace_str as "replace_str1",b.index as "index1",b.type as
+		"type1",c.expr as "expr2",c.replace_str as "replace_str2",c.index as
+		"index2",c.type as "type2" from tr_model_test a left
+		join (select *
+		from tr_p_rule where cid=${cid} and chan_id=${chan_id} and
+		type=1
+		<if test="p_name!=null and p_name!=''"> and p_name=#{p_name}</if>
+		) b on
+		a.p_name=b.p_name left join (select * from tr_p_rule where
+		cid=${cid}
+		and chan_id=${chan_id} and type=2
+		<if test="p_name!=null and p_name!=''"> and p_name=#{p_name}</if>
+		) c on a.p_name=c.p_name where
+		a.cid=${cid} and a.chan_id=${chan_id}
+		<if test="p_name!=null and p_name!=''"> and a.p_name=#{p_name}</if>
+		order by
+		a.p_name,b.index,c.index
+	</select>
+
+	<update id="updateAttrRule" parameterType="map">
+		update tr_p_rule
+		<set>
+			<if test="expr != null and expr!=''">expr=#{expr},</if>
+			<if test="type != null and type!=''">type=#{type},</if>
+		</set>
+		where cid=${cid}
+		and chan_id=${chan_id}
+		and p_name=#{p_name}
+	</update>
+
+	<delete id="deleteAttrRule" parameterType="map">
+		delete from tr_p_rule
+		where cid=${cid} and chan_id=${chan_id} and p_name=#{p_name}
+	</delete>
+
+	<insert id="insertAttrRule" parameterType="map">
+		insert into
+		tr_p_rule(cid,chan_id,p_name,expr,replace_str,index,type)
+		values(${cid},${chan_id},#{p_name},#{expr},#{replace_str},${index},${type})
+	</insert>
+
+
+	<resultMap type="AttrRuleTestPO" id="attrRuleTestPO">
+		<result column="p_name" property="p_name" />
+		<result column="p_value" property="p_value" />
+		<!-- 一对多的关系 -->
+		<!-- property: 指的是集合属性的值, ofType：指的是集合中元素的类型 -->
+		<collection property="originals" ofType="OriginalPO">
+			<result column="original" property="original" />
+		</collection>
+	</resultMap>
+
+	<select id="queryTestDatas" parameterType="map" resultMap="attrRuleTestPO">
+		select a.*,b.original from (select distinct cid,p_name,p_value from
+		tr_pv_test where cid=${cid}
+		<if test="chan_id!= null and chan_id!=''">and chan_id=${chan_id}</if>
+		<if test="p_name!=null and p_name!=''">and p_name=#{p_name}</if>
+		<if test="p_value!=null and p_value!=''">and p_name like #{p_value}</if>
+		limit ${limit} offset ${offset})a left join (select p_value,original
+		from tr_pv_test where cid=${cid}
+		<if test="chan_id!= null and chan_id!=''">and chan_id=${chan_id}</if>
+		<if test="p_name!=null and p_name!=''">and p_name=#{p_name}</if>
+		<if test="p_value!=null and p_value!=''">and p_name like #{p_value}</if>
+		) b
+		on a.p_value=b.p_value
+	</select>
+	<select id="countTestDatas" parameterType="map" resultType="long">
+		select count(1) from (
+		select distinct a.cid,a.p_name,a.p_value from
+		tr_pv_test a
+		where a.cid=${cid}
+		<if test="chan_id!= null and chan_id!=''">and a.chan_id=${chan_id}</if>
+		<if test="p_name!=null and p_name!=''">and a.p_name=#{p_name}</if>
+		<if test="p_value!=null and p_value!=''">and a.p_name like #{p_value}</if>
+		) b
+	</select>
+
+	<select id="configTestQuery" parameterType="map" resultType="map">
+		select a.*,b.p_name as "p_name1",b.mutil from (select * from tr_model_audit where
+		cid=${cid} and chan_id=${chan_id}) a left join (select * from tr_model_test
+		where cid=${cid} and chan_id=${chan_id}) b on a.p_name=b.p_name
+	</select>
+	<select id="regtestQuery" parameterType="map" resultType="map">
+		select
+		* from tr_value_audit a where a.cid=${cid} and a.chan_id=${chan_id}
+		and a.p_name=#{p_name}
+	</select>
+
+
+	<select id="queryTrModelTests" parameterType="map" resultType="map">
+		select * from tr_model_test where cid=${cid} and chan_id=${chan_id}
+		and p_name=#{p_name}
+	</select>
+
+	<update id="updateTrModelTest" parameterType="map">
+		update
+		tr_model_test set mutil=${mutil} where cid=${cid} and
+		chan_id=${chan_id} and p_name=#{p_name}
+	</update>
+
+	<insert id="insertTrModelTest" parameterType="map">
+		insert into
+		tr_model_test(cid,chan_id,p_name,mutil)
+		values(${cid},${chan_id},#{p_name},${mutil})
+	</insert>
+
+
+
+	<select id="countTrValueAuditDatas" parameterType="map"
+		resultType="long">
+		select count(1) from tr_value_audit where cid=${cid} and
+		chan_id=${chan_id}
+		and p_name=#{p_name}
+	</select>
+
+	<select id="queryTrValueAuditDatas" parameterType="map"
+		resultType="map">
+		select * from tr_value_audit where cid=${cid} and
+		chan_id=${chan_id} and
+		p_name=#{p_name} limit ${limit} offset ${offset}
+	</select>
+
+	<select id="queryAttrs" parameterType="map" resultType="map">
+		select
+		distinct p_name pname from tr_model_test where cid = ${cid} and chan_id=${chan_id}
+	</select>
+</mapper>

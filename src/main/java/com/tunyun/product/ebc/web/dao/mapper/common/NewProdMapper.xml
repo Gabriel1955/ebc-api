@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="gbk"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.tunyun.product.ebc.web.dao.NewProdDaoImpl">
+    <resultMap type="ProgrammePO" id="programmePO">
+        <result column="prog_id" property="prog_id"/>
+        <result column="prog_name" property="prog_name"/>
+        <result column="prog_score" property="prog_score"/>
+        <result column="stat_time" property="stat_time"/>
+        <!-- 一对多的关系 -->
+        <!-- property: 指的是集合属性的值, ofType：指的是集合中元素的类型 -->
+        <collection property="attrs" ofType="ProgrammeAttrPO">
+            <result column="prog_id1" property="prog_id"/>
+            <result column="p_id" property="p_id"/>
+            <result column="stat_time1" property="stat_time"/>
+            <result column="p_name" property="p_name"/>
+            <collection property="valias" ofType="AliasPO">
+                <result column="v_id" property="id"/>
+                <result column="v_name" property="name"/>
+            </collection>
+        </collection>
+    </resultMap>
+
+    <select id="countProgrammes" resultType="long" parameterType="map">
+        select count(1) from tr_programme where cid=${cid}
+        <if test="startTime!=null and startTime>0 and endTime!=null and endTime>0">
+            <![CDATA[ and stat_time >= ${startTime} and stat_time < ${endTime}]]>
+        </if>
+    </select>
+    <select id="queryProgrammesByPage" parameterType="map" resultMap="programmePO">
+        select a.*,b.p_id,b.v_id,b.prog_id as "prog_id1",b.stat_time as "stat_time1",c.p_name,d.v_name from (select *
+        from tr_programme where cid=${cid}
+        <if test="startTime!=null and startTime>0 and endTime!=null and endTime>0">
+        <![CDATA[ and stat_time >= ${startTime} and stat_time < ${endTime}]]>
+        </if>
+        order by prog_score desc <if test="limit!=null and offset!=null">
+        limit ${limit} offset ${offset}
+    </if>) a left join tr_programme_attr b on
+        a.prog_id=b.prog_id left join tp_p_model c on b.p_id=c.pid left join tp_pv_model d on b.v_id=d.vid order by
+        a.prog_score desc,b.p_id,b.v_id
+    </select>
+
+    <select id="countProgrammeTypes" resultType="long" parameterType="map">
+        select count(1) from tr_programme_type where type_id=${type_id}
+        <if test="startTime!=null and startTime>0 and endTime!=null and endTime>0">
+            <![CDATA[ and stat_time >= ${startTime} and stat_time < ${endTime}]]>
+        </if>
+    </select>
+
+    <select id="queryProgrammeTypesByPage" parameterType="map" resultMap="programmePO">
+        select a.*,b.p_id,b.v_id,b.prog_id as "prog_id1",b.stat_time as "stat_time1",c.p_name,d.v_name from (select *
+        from tr_programme_type where type_id=${type_id}
+        <if test="startTime!=null and startTime>0 and endTime!=null and endTime>0">
+            <![CDATA[ and stat_time >= ${startTime} and stat_time < ${endTime}]]>
+        </if>
+        order by prog_score desc <if test="limit!=null and offset!=null">
+        limit ${limit} offset ${offset}
+    </if>) a left join tr_programme_attr_type b on
+        a.prog_id=b.prog_id left join tp_p_model c on b.p_id=c.pid left join tp_pv_model d on b.v_id=d.vid order by
+        a.prog_score desc,b.p_id,b.v_id
+    </select>
+
+    <select id="countProgrammeAttrs" resultType="long" parameterType="map">
+        select count(1) from (select distinct * from tr_programme_attr where prog_id=${prog_id})a
+    </select>
+    <select id="queryProgrammeAttrsByPage" parameterType="map" resultType="map">
+        select distinct a.*,b.p_name,c.v_name from (select distinct * from tr_programme_attr where prog_id=${prog_id}
+        <if test="limit!=null and offset!=null">
+            limit ${limit} offset ${offset}
+        </if>)a left join tp_p_model b on a.p_id=b.pid left join tp_pv_model c on a.v_id=c.vid
+    </select>
+    
+    <select id="queryTrConfigTypes" parameterType="map" resultType="map">
+        select a.*,b.p_name,c.v_name from (select * from tr_config_type where cid=${cid}) a left join tp_p_model b on a.p_id=b.pid left join tp_pv_model c on a.v_id=c.vid
+    </select>
+
+    <select id="queryTimeList" parameterType="map" resultType="map">
+        select distinct a.stat_time from tr_programme a where a.cid=${cid} order by a.stat_time desc
+    </select>
+
+
+</mapper>

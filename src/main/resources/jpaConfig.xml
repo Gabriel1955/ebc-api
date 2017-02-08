@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<settings>
+		<setting name="logImpl" value="SLF4J" />
+		 <setting name="logPrefix" value="dao."/>
+	</settings>
+	<typeAliases>
+		<typeAlias type="com.tunyun.product.ebc.bgmanager.po.AttrValuePO"
+			alias="AttrValuePO" />
+		<typeAlias type="com.tunyun.product.ebc.bgmanager.po.AttrPO"
+			alias="AttrPO" />
+		<typeAlias type="com.tunyun.product.ebc.bgmanager.po.AliasPO"
+			alias="AliasPO" />
+		<typeAlias type="com.tunyun.product.ebc.bgmanager.po.RulePO"
+			alias="RulePO" />
+		<typeAlias type="com.tunyun.product.ebc.bgmanager.po.AttrRulePO"
+			alias="AttrRulePO" />
+		<typeAlias type="com.tunyun.product.ebc.bgmanager.po.AttrRuleTestPO"
+			alias="AttrRuleTestPO" />
+		<typeAlias type="com.tunyun.product.ebc.bgmanager.po.OriginalPO"
+			alias="OriginalPO" />
+
+		<typeAlias type="com.tunyun.product.ebc.bgmanager.po.TriCategPO"
+			alias="TriCategPO" />
+
+		<typeAlias type="com.tunyun.product.ebc.bgmanager.po.WordAdjectivePO"
+			alias="WordAdjectivePO" />
+		<typeAlias type="com.tunyun.product.ebc.bgmanager.po.WordFeaturePO"
+			alias="WordFeaturePO" />
+
+		<typeAlias type="com.tunyun.product.ebc.bgmanager.po.AttrDetailPO"
+			alias="AttrDetailPO" />
+
+		<typeAlias type="com.tunyun.product.ebc.web.dao.po.ProgrammePO"
+				   alias="ProgrammePO" />
+
+		<typeAlias type="com.tunyun.product.ebc.web.dao.po.ProgrammeAttrPO"
+				   alias="ProgrammeAttrPO" />
+	</typeAliases>
+
+</configuration>

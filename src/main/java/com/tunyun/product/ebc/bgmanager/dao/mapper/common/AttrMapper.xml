@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="gbk"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.tunyun.product.ebc.bgmanager.dao.AttrDaoImpl">
+	<resultMap type="AttrPO" id="attrBean">
+		<result column="cid" property="cid" />
+		<result column="pid" property="pid" />
+		<result column="p_name" property="pname" />
+		<result column="state" property="state" />
+		<!-- 一对多的关系 -->
+		<!-- property: 指的是集合属性的值, ofType：指的是集合中元素的类型 -->
+		<collection property="palias" ofType="AliasPO">
+			<result column="pid" property="id" />
+			<result column="p_alias" property="name" />
+		</collection>
+	</resultMap>
+
+	<select id="queryApprovedAttrs" resultMap="attrBean"
+		parameterType="map">
+		select distinct
+		a.cid,a.pid,a.p_name,a.state,b.pid,b.p_alias from
+		tp_p_model
+		a,tp_p_model b where a.pid=b.pid and a.cid = ${cid}
+		and a.state = 1
+		order by a.p_name
+	</select>
+
+	<select id="queryNotApprovedAttrs" resultMap="attrBean"
+		parameterType="map">
+		select distinct a.cid,a.pid,a.p_name,a.state,b.pid,b.p_alias
+		from tp_p_synonym a,tp_p_synonym b
+		where a.p_name=b.p_name
+		<if test="cid!=null and cid!=''">
+			and a.cid = ${cid}
+		</if>
+		<if test="p_name!=null and p_name!=''">
+			and a.p_name=#{p_name}
+		</if>
+		<if
+			test="startTime!=null and startTime!='' and endTime!=null and endTime!=''">
+			<![CDATA[ and a.add_time >= ${startTime} and a.add_time < ${endTime} and b.add_time >= ${startTime} and b.add_time < ${endTime} ]]>
+		</if>
+		<![CDATA[and a.state < 0 ]]>
+		order by a.state desc,a.p_name
+	</select>
+
+	<select id="queryAttrDetails" parameterType="map" resultType="map">
+		select a.p_num,a.chan_id,a.p_alias,a.p_alias,b.chan_name from
+		tp_p_cited a left join tr_tenant_chan b on a.chan_id=b.chan_id where
+		a.cid=${cid}
+		and a.p_alias=#{p_alias}
+		<![CDATA[ and a.add_time >= ${startTime} and a.add_time < ${endTime}]]>
+	</select>
+
+	<update id="updateAttrSynonym" parameterType="map">
+		update tp_p_synonym
+		<set>
+			<if test="state != null">state=${state},</if>
+			<if test="newpname != null and newpname!=''">p_name=#{newpname},</if>
+		</set>
+		where cid=${cid} 
+		<if test="p_name!=null and p_name!=''">
+			and p_name=#{p_name}
+		</if>
+		<if test="p_alias!=null and p_alias!=''">
+			and p_alias=#{p_alias}
+		</if>
+    <![CDATA[ 
+    	 and state<0 and add_time >= ${startTime} and add_time < ${endTime}
+     ]]>
+	</update>
+
+	<select id="queryMaxUid" resultType="long" parameterType="map">
+		select max(uid) from tri_prop 
+	</select>
+
+	<insert id="insertPModel" parameterType="map">
+		insert into tp_p_model
+		(state,add_time,cid,pid,p_name,p_alias) values
+		(${state},${addTime},${cid},${pid},#{p_name},#{p_alias})
+	</insert>
+	<insert id="insertP" parameterType="map">
+		insert into tri_prop
+		(uid,prop_name,prop_alias,sort_order) values
+		(${pid},#{p_name},#{p_alias},1)
+	</insert>
+	<insert id="insertCategP" parameterType="map">
+		insert into
+		tri_categ_prop (cid,pid,sort_order) values
+		(${cid},${pid},1)
+	</insert>
+	
+</mapper>
